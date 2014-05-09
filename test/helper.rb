@@ -1,4 +1,5 @@
 require_relative '../lib/docusign_rest'
+
 require 'minitest/spec'
 require 'minitest/autorun'
 require 'turn'

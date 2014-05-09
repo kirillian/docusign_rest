@@ -684,7 +684,8 @@ module DocusignRest
         emailSubject:       options[:email][:subject],
         templateId:         options[:template_id],
         eventNotification:  get_event_notification(options[:event_notification]),
-        templateRoles:      get_template_roles(options[:signers])
+        templateRoles:      get_template_roles(options[:signers]),
+        compositeTemplates: options[:compositeTemplates]
        }.to_json
 
       uri = build_uri("/accounts/#{acct_id}/envelopes")
@@ -696,6 +697,22 @@ module DocusignRest
 
       response = http.request(request)
       JSON.parse(response.body)
+    end
+
+    def create_envelope_from_template_request(request)
+      raise "request invalid: #{request.errors.messages}" unless request.valid?
+
+      response = create_envelope_from_template(request.attributes)
+
+      raise "response error: #{response}" unless (response['error_code'].nil?)
+
+      Envelope.new(create_envelope_from_template(request.attributes))
+    end
+
+    def get_recipient_view_request(request)
+      raise "request invalid: #{request.errors.messages}" unless request.valid?
+      response = RecipientViewResponse.new(get_recipient_view(request.attributes))
+      response.url
     end
 
 
@@ -895,6 +912,47 @@ module DocusignRest
       end
     end
 
+
+    # Public retrieves the attached file from a given envelope. Buffers the document stream while reading and writing to temp file.
+    # Returns the temp file in which the document is saved.
+    #
+    # envelope_id      - ID of the envelope from which the doc will be retrieved
+    # document_id      - ID of the document to retrieve
+    # temp_file_path  - Local absolute path of a temp file where the document is saved
+    # encoding        - Encoding for the file
+    # headers          - Optional hash of headers to merge into the existing
+    #                    required headers for a multipart request.
+    #
+    # Example
+    #
+    #  client.get_document_from_envelope(
+    #    envelope_id: @envelope_response['envelopeId'],
+    #    document_id: 1,
+    #    temp_file_path: '/tmp/docusign_docs/file_name.pdf',
+    #  )
+    #
+    # Returns the PDF document as a byte stream.
+    def save_document_to_temp_file(options={})
+      split_path = options[:local_save_path].split('/')
+      file_name = split_path.pop #removes the document name and extension from the array
+      path = split_path.join("/") #rejoins the array to form path to the folder that will contain the file
+      name = file_name.split('.')
+      file = Tempfile.new([name.first, ".#{name.pop}"], path, :encoding => options[:encoding]? options[encoding]: 'ascii-8bit')
+
+      content_type = { 'Content-Type' => 'application/json' }
+      content_type.merge(options[:headers]) if options[:headers]
+      uri = build_uri("/accounts/#{acct_id}/envelopes/#{options[:envelope_id]}/documents/#{options[:document_id]}")
+      http = initialize_net_http_ssl(uri)
+      request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
+      http.request(request) do |response|
+        response.read_body do |segment|
+          puts("----------- writing data to file --------- #{segment.size}")
+          file.write(segment)
+        end
+      end
+      file.close
+      return file
+    end
 
     # Public retrieves the document infos from a given envelope
     #

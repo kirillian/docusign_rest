@@ -186,28 +186,47 @@ describe DocusignRest::Client do
           end
         end
 
-
-        # use the templateId to get the envelopeId
-        VCR.use_cassette("create_envelope/from_template")  do
-          @envelope_response = @client.create_envelope_from_template(
-            status: 'sent',
-            email: {
-              subject: "The test email subject envelope",
-              body: "Envelope body content here"
-            },
-            template_id: @template_response["templateId"],
-            signers: [
-              {
-                embedded: true,
-                name: 'jon',
-                email: 'someone@example.com',
-                role_name: 'Issuer'
-              }
-            ]
+        # create a composite template dynamically
+        VCR.use_cassette("create_composite_template")  do
+          @composite_template_response = @client.create_template(
+              description: 'Cool composite  Description',
+              name: "Cool composite Template Name",
+              signers: [
+                  {
+                      embedded: true,
+                      name: 'jon',
+                      email: 'someone@example.com',
+                      role_name: 'Issuer',
+                      sign_here_tabs: [
+                          {
+                              anchor_string: 'sign here',
+                              template_locked: true, #doesn't seem to do anything
+                              template_required: true, #doesn't seem to do anything
+                              email_notification: {supportedLanguage: 'en'} #FIXME if signer is setup as 'embedded' initial email notifications don't go out, but even when I set up a signer as non-embedded this setting didn't seem to make the email notifications actually stop...
+                          }
+                      ]
+                  }
+              ],
+              files: [
+                  {path: 'test.pdf', name: 'test.pdf'}
+              ]
           )
-          if ! @envelope_response["errorCode"].nil?
-            puts "[API ERROR] (create_envelope/from_template) errorCode: '#{@envelope_response["errorCode"]}', message: '#{@envelope_response["message"]}'"
+          if ! @composite_template_response["errorCode"].nil?
+            puts "[API ERROR] (@composite_template_response) errorCode: '#{@composite_template_response["errorCode"]}', message: '#{@composite_template_response["message"]}'"
           end
+        end
+
+        VCR.use_cassette("create_envelope/from_template")  do
+          request = DocusignRest::EnvelopeFromTemplateRequest.new({
+            :status => 'sent',
+            :email => DocusignRest::Email.new(:subject => 'subject test', :body => 'body test'),
+            :template_id => @template_response['templateId'],
+            :signers => [DocusignRest::Signer.new(:name => 'jon', :email => 'someone@example.com', :role_name => 'Issuer')],
+            :compositeTemplates => [DocusignRest::CompositeTemplate.new(:serverTemplates => [DocusignRest::ServerTemplate.new(:sequence => 1, :templateId => @composite_template_response['templateId'])])]
+          })
+
+          @envelope_response = @client.create_envelope_from_template_request(request)
+
         end
       end
 
@@ -224,12 +243,12 @@ describe DocusignRest::Client do
         @template_response["name"].must_equal "Cool Template Name"
 
         #ensure creating an envelope from a dynamic template did not error
-        @envelope_response["errorCode"].must_be_nil
+        @envelope_response.wont_be_nil
 
         #return the URL for embedded signing
         VCR.use_cassette("get_recipient_view")  do
           response = @client.get_recipient_view(
-            envelope_id: @envelope_response["envelopeId"],
+            envelope_id: @envelope_response.envelopeId,
             name: 'jon',
             email: 'someone@example.com',
             return_url: 'http://google.com'
@@ -242,7 +261,7 @@ describe DocusignRest::Client do
       it "should retrieve the envelope recipients status" do
         VCR.use_cassette("get_envelope_recipients")  do
           response = @client.get_envelope_recipients(
-            envelope_id: @envelope_response["envelopeId"],
+            envelope_id: @envelope_response.envelopeId,
             include_tabs: true,
             include_extended: true
           )
@@ -254,11 +273,24 @@ describe DocusignRest::Client do
       it "should retrieve the byte stream of the envelope doc from DocuSign" do
         VCR.use_cassette("get_document_from_envelope")  do
           @client.get_document_from_envelope(
-            envelope_id: @envelope_response["envelopeId"],
+            envelope_id: @envelope_response.envelopeId,
             document_id: 1,
             local_save_path: 'docusign_docs/file_name.pdf'
           )
           # NOTE manually check that this file has the content you'd expect
+        end
+      end
+      
+      it "should save the the envelope doc from DocuSign on a temp file and return the instance" do
+        VCR.use_cassette("save_document_to_temp_file") do
+          file = @client.save_document_to_temp_file(
+              envelope_id: @envelope_response.envelopeId,
+              document_id: 1,
+              local_save_path: 'docusign_docs/file_name_temp.pdf'
+          )
+          assert(file.instance_of? Tempfile)
+          assert(file.size > 0)
+          # NOTE manually check that this file has been saved and has the content you'd expect
         end
       end
     end
