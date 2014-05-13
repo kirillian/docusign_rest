@@ -281,13 +281,36 @@ describe DocusignRest::Client do
         end
       end
 
+      it "should raise an error when SaveDocumentToTempFileRequest is invalid" do
+        VCR.use_cassette("save_document_to_temp_file") do
+          request = DocusignRest::SaveDocumentToTempFileRequest.new(envelope_id: @envelope_response.envelopeId,
+                                                                    temp_file_path: 'docusign_docs/file_name_temp.pdf')
+          assert_raises Exception do
+            @client.save_document_to_temp_file_request(request)
+          end
+
+        end
+      end
+
       it "should save the the envelope doc from DocuSign on a temp file and return the instance" do
         VCR.use_cassette("save_document_to_temp_file") do
-          file = @client.save_document_to_temp_file(
-              envelope_id: @envelope_response.envelopeId,
-              document_id: 1,
-              temp_file_path: 'docusign_docs/file_name_temp.pdf'
-          )
+          request = DocusignRest::SaveDocumentToTempFileRequest.new(envelope_id: @envelope_response.envelopeId,
+                                                                    document_id: 1,
+                                                                    temp_file_path: 'docusign_docs/file_name_temp.pdf')
+          file = @client.save_document_to_temp_file_request(request)
+          assert(file.instance_of? Tempfile)
+          assert(file.size > 0)
+          # NOTE manually check that this file has been saved and has the content you'd expect
+        end
+      end
+
+      it "should save the the envelope doc from DocuSign on a temp file and return the instance when setting a different encoding" do
+        VCR.use_cassette("save_document_to_temp_file") do
+          request = DocusignRest::SaveDocumentToTempFileRequest.new(envelope_id: @envelope_response.envelopeId,
+                                                                    document_id: 1,
+                                                                    temp_file_path: 'docusign_docs/file_name_temp.pdf',
+                                                                    :encoding => 'UTF-8')
+          file = @client.save_document_to_temp_file_request(request)
           assert(file.instance_of? Tempfile)
           assert(file.size > 0)
           # NOTE manually check that this file has been saved and has the content you'd expect

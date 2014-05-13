@@ -23,13 +23,13 @@ module DocusignRest
     end
 
     def add_inline_template(template)
-      self.inlineTemplates||= []
-      self.inlineTemplates << template if template.valid?
+      self.inlineTemplates ||= []
+      self.inlineTemplates << template
     end
 
     def add_server_template(template)
-      self.serverTemplates||= []
-      self.serverTemplates << template if template.valid?
+      self.serverTemplates ||= []
+      self.serverTemplates << template
     end
 
     def inline_templates_valid
@@ -83,7 +83,7 @@ module DocusignRest
 
     hash_attr :signers
 
-    def signers= signers
+    def signers=(signers)
       attribute_hash[:signers] = signers.each_with_index { |signer, index| signer.recipientId = index + 1 }
     end
 

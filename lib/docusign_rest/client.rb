@@ -698,21 +698,20 @@ module DocusignRest
     end
 
     def create_envelope_from_template_request(request)
-      raise "request invalid: #{request.errors.messages}" unless request.valid?
+      response = execute_request(request) do |request|
+        create_envelope_from_template request.attributes
+      end
 
-      response = create_envelope_from_template(request.attributes)
-
-      raise "response error: #{response}" unless (response['errorCode'].nil?)
-
-      Envelope.new(create_envelope_from_template(request.attributes))
+      Envelope.new response
     end
 
     def get_recipient_view_request(request)
-      raise "request invalid: #{request.errors.messages}" unless request.valid?
-      response = RecipientViewResponse.new(get_recipient_view(request.attributes))
-      response.url
-    end
+      response = execute_request(request) do |request|
+        get_recipient_view request.attributes
+      end
 
+      RecipientViewResponse.new(response).url
+    end
 
     # Public returns the names specified for a given email address (existing docusign user)
     #
@@ -930,26 +929,34 @@ module DocusignRest
     #    temp_file_path: '/tmp/docusign_docs/file_name.pdf',
     #  )
     #
-    # Returns the PDF document as a byte stream.
     def save_document_to_temp_file(options={})
       split_path = options[:temp_file_path].rpartition('/') #splits the absolute path to ['path to parent directory', '/', 'full name of file']
       name = split_path.pop.split('.') # splits the full name of file to ['name', 'extension without the .']
       name[1] = '.' << name[1] # adds the . to the extension, changing the array from the above step to ['name', '.extension']
-      file = Tempfile.new(name, split_path.first, :encoding => options[:encoding] ? options[encoding] : 'ascii-8bit')
+
+      encoding = options[:encoding] || 'ascii-8bit'
+      file = Tempfile.new(name, split_path.first, :encoding => encoding)
 
       content_type = { 'Content-Type' => 'application/json' }
       content_type.merge(options[:headers]) if options[:headers]
       uri = build_uri("/accounts/#{acct_id}/envelopes/#{options[:envelope_id]}/documents/#{options[:document_id]}")
-      http = initialize_net_http_ssl(uri)
+      http = initialize_net_http_ssl uri
       request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
+
       http.request(request) do |response|
         response.read_body do |segment|
+          segment.force_encoding encoding unless encoding == 'ascii-8bit'
           file.write(segment)
         end
       end
       file.close
 
       return file
+    end
+
+    def save_document_to_temp_file_request(request)
+      raise Exception.new("request invalid: #{request.errors.messages}")  unless request.valid?
+      save_document_to_temp_file(request.attributes)
     end
 
     # Public retrieves the document infos from a given envelope
@@ -1122,6 +1129,17 @@ module DocusignRest
       request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
       response = http.request(request)
       JSON.parse(response.body)
+    end
+
+    private
+    def execute_request(request)
+      raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
+
+      response = yield request
+
+      raise Exception.new "response error: #{response}" unless response['errorCode'].nil?
+
+      response
     end
   end
 end
