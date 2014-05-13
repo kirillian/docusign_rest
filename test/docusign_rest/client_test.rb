@@ -98,7 +98,7 @@ describe DocusignRest::Client do
               embedded: true,
               name: 'Test Guy',
               email: 'testguy@example.com',
-              role_name: 'Issuer',
+              roleName: 'Issuer',
               sign_here_tabs: [
                 {
                   anchor_string: 'sign here',
@@ -133,7 +133,7 @@ describe DocusignRest::Client do
               embedded: true,
               name: 'Test Girl',
               email: 'testgirl@example.com',
-              role_name: 'Attorney',
+              roleName: 'Attorney',
               sign_here_tabs: [
                 {
                   anchor_string: 'sign here',
@@ -166,7 +166,7 @@ describe DocusignRest::Client do
                 embedded: true,
                 name: 'jon',
                 email: 'someone@example.com',
-                role_name: 'Issuer',
+                roleName: 'Issuer',
                 sign_here_tabs: [
                   {
                     anchor_string: 'sign here',
@@ -196,7 +196,7 @@ describe DocusignRest::Client do
                       embedded: true,
                       name: 'jon',
                       email: 'someone@example.com',
-                      role_name: 'Issuer',
+                      roleName: 'Issuer',
                       sign_here_tabs: [
                           {
                               anchor_string: 'sign here',
@@ -217,16 +217,16 @@ describe DocusignRest::Client do
         end
 
         VCR.use_cassette("create_envelope/from_template")  do
+          signer = DocusignRest::Signer.new(:name => 'jon', :email => 'someone@example.com', :roleName => 'Issuer')
+
           request = DocusignRest::EnvelopeFromTemplateRequest.new({
             :status => 'sent',
             :email => DocusignRest::Email.new(:subject => 'subject test', :body => 'body test'),
-            :template_id => @template_response['templateId'],
-            :signers => [DocusignRest::Signer.new(:name => 'jon', :email => 'someone@example.com', :role_name => 'Issuer')],
-            :compositeTemplates => [DocusignRest::CompositeTemplate.new(:serverTemplates => [DocusignRest::ServerTemplate.new(:sequence => 1, :templateId => @composite_template_response['templateId'])])]
+            :compositeTemplates => [DocusignRest::CompositeTemplate.new([@template_response['templateId']],[signer], 1),
+                                    DocusignRest::CompositeTemplate.new([@composite_template_response['templateId']],[signer], 2)]
           })
 
           @envelope_response = @client.create_envelope_from_template_request(request)
-
         end
       end
 
@@ -280,13 +280,13 @@ describe DocusignRest::Client do
           # NOTE manually check that this file has the content you'd expect
         end
       end
-      
+
       it "should save the the envelope doc from DocuSign on a temp file and return the instance" do
         VCR.use_cassette("save_document_to_temp_file") do
           file = @client.save_document_to_temp_file(
               envelope_id: @envelope_response.envelopeId,
               document_id: 1,
-              local_save_path: 'docusign_docs/file_name_temp.pdf'
+              temp_file_path: 'docusign_docs/file_name_temp.pdf'
           )
           assert(file.instance_of? Tempfile)
           assert(file.size > 0)

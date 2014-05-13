@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency('multipart-post', '>= 1.2')
   gem.add_dependency('json')
   gem.add_dependency('hash_attr')
-  gem.add_dependency('activemodel')
+  gem.add_dependency('activemodel', '>= 4.0.2')
   gem.add_development_dependency('rake')
   gem.add_development_dependency('minitest', '~>4.0')
   gem.add_development_dependency('guard-minitest')

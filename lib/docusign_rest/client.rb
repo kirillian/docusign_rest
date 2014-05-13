@@ -218,7 +218,7 @@ module DocusignRest
         template_role = {
           name:     signer[:name],
           email:    signer[:email],
-          roleName: signer[:role_name],
+          roleName: signer[:roleName],
           tabs: {
             textTabs:     get_signer_tabs(signer[:text_tabs]),
             checkboxTabs: get_signer_tabs(signer[:checkbox_tabs])
@@ -316,7 +316,7 @@ module DocusignRest
           recipientAttachment:                   nil,
           recipientId:                           "#{index + 1}",
           requireIdLookup:                       false,
-          roleName:                              signer[:role_name],
+          roleName:                              signer[:roleName],
           routingOrder:                          index + 1,
           socialAuthentications:                 nil
         }
@@ -682,9 +682,7 @@ module DocusignRest
         status:             options[:status],
         emailBlurb:         options[:email][:body],
         emailSubject:       options[:email][:subject],
-        templateId:         options[:template_id],
         eventNotification:  get_event_notification(options[:event_notification]),
-        templateRoles:      get_template_roles(options[:signers]),
         compositeTemplates: options[:compositeTemplates]
        }.to_json
 
@@ -704,7 +702,7 @@ module DocusignRest
 
       response = create_envelope_from_template(request.attributes)
 
-      raise "response error: #{response}" unless (response['error_code'].nil?)
+      raise "response error: #{response}" unless (response['errorCode'].nil?)
 
       Envelope.new(create_envelope_from_template(request.attributes))
     end
@@ -769,6 +767,7 @@ module DocusignRest
       request.body = post_body
 
       response = http.request(request)
+
       JSON.parse(response.body)
     end
 
@@ -933,11 +932,10 @@ module DocusignRest
     #
     # Returns the PDF document as a byte stream.
     def save_document_to_temp_file(options={})
-      split_path = options[:local_save_path].split('/')
-      file_name = split_path.pop #removes the document name and extension from the array
-      path = split_path.join("/") #rejoins the array to form path to the folder that will contain the file
-      name = file_name.split('.')
-      file = Tempfile.new([name.first, ".#{name.pop}"], path, :encoding => options[:encoding]? options[encoding]: 'ascii-8bit')
+      split_path = options[:temp_file_path].rpartition('/') #splits the absolute path to ['path to parent directory', '/', 'full name of file']
+      name = split_path.pop.split('.') # splits the full name of file to ['name', 'extension without the .']
+      name[1] = '.' << name[1] # adds the . to the extension, changing the array from the above step to ['name', '.extension']
+      file = Tempfile.new(name, split_path.first, :encoding => options[:encoding] ? options[encoding] : 'ascii-8bit')
 
       content_type = { 'Content-Type' => 'application/json' }
       content_type.merge(options[:headers]) if options[:headers]
@@ -946,11 +944,11 @@ module DocusignRest
       request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
       http.request(request) do |response|
         response.read_body do |segment|
-          puts("----------- writing data to file --------- #{segment.size}")
           file.write(segment)
         end
       end
       file.close
+
       return file
     end
 
