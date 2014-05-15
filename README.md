@@ -9,7 +9,7 @@ The goal of this project is to add a layer of validation prior to sending a requ
 ##Progress
 
 - Added dependency to 'activemodel' in order to validate a request before sending it to Docusign
-- Modified 'save_document_to_temp_file' function not to store the request body in memory before writing the file
+- Added 'save_document_to_temp_file' function not to store the request body in memory before writing the file. Uses a temporary file.
 - Added the ability to set what encoding the file will be written with
 - Added Composite Template support
 

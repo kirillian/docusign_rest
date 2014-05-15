@@ -930,13 +930,6 @@ module DocusignRest
     #  )
     #
     def save_document_to_temp_file(options={})
-      split_path = options[:temp_file_path].rpartition('/') #splits the absolute path to ['path to parent directory', '/', 'full name of file']
-      name = split_path.pop.split('.') # splits the full name of file to ['name', 'extension without the .']
-      name[1] = '.' << name[1] # adds the . to the extension, changing the array from the above step to ['name', '.extension']
-
-      encoding = options[:encoding] || 'ascii-8bit'
-      file = Tempfile.new(name, split_path.first, :encoding => encoding)
-
       content_type = { 'Content-Type' => 'application/json' }
       content_type.merge(options[:headers]) if options[:headers]
       uri = build_uri("/accounts/#{acct_id}/envelopes/#{options[:envelope_id]}/documents/#{options[:document_id]}")
@@ -944,14 +937,12 @@ module DocusignRest
       request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
 
       http.request(request) do |response|
-        response.read_body do |segment|
-          segment.force_encoding encoding unless encoding == 'ascii-8bit'
-          file.write(segment)
+        if response.kind_of? Net::HTTPSuccess
+          return write_response_to_temp_file response, options
+        else
+          raise Exception.new "Error occurred, errorCode returned from DocuSign: #{JSON.parse(response.body)['errorCode']}"
         end
       end
-      file.close
-
-      return file
     end
 
     def save_document_to_temp_file_request(request)
@@ -1140,6 +1131,24 @@ module DocusignRest
       raise Exception.new "response error: #{response}" unless response['errorCode'].nil?
 
       response
+    end
+
+    def write_response_to_temp_file(response, options)
+      encoding = options[:encoding] || 'ascii-8bit'
+      file = new_temp_file options[:temp_file_path], encoding
+      response.read_body do |segment|
+        segment.force_encoding encoding unless encoding == 'ascii-8bit'
+        file.write(segment)
+      end
+      file.close
+      file
+    end
+
+    def new_temp_file(absolute_path, encoding)
+      split_path = absolute_path.rpartition('/') #splits the absolute path to ['path to parent directory', '/', 'full name of file']
+      name = split_path.pop.split('.') # splits the full name of file to ['name', 'extension without the .']
+      name[1] = '.' << name[1] # adds the . to the extension, changing the array from the above step to ['name', '.extension']
+      Tempfile.new(name, split_path.first, :encoding => encoding)
     end
   end
 end

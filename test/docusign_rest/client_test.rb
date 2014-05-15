@@ -292,6 +292,17 @@ describe DocusignRest::Client do
         end
       end
 
+      it "should raise an Exception when trying to save an envelope document with an envelope id that does not exist but passes validation" do
+        VCR.use_cassette("save_document_to_temp_file") do
+          request = DocusignRest::SaveDocumentToTempFileRequest.new(envelope_id: 'aaaaaaaa-aaaa-aaaa-aaaa-abcdabcdabcd',
+                                                                    document_id: 1,
+                                                                    temp_file_path: 'docusign_docs/file_name_temp.pdf')
+          assert_raises Exception do
+            @client.save_document_to_temp_file_request(request)
+          end
+        end
+      end
+
       it "should save the the envelope doc from DocuSign on a temp file and return the instance" do
         VCR.use_cassette("save_document_to_temp_file") do
           request = DocusignRest::SaveDocumentToTempFileRequest.new(envelope_id: @envelope_response.envelopeId,
