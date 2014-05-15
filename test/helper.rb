@@ -2,6 +2,7 @@ require_relative '../lib/docusign_rest'
 
 require 'minitest/spec'
 require 'minitest/autorun'
+require 'factory_girl'
 require 'turn'
 require 'json'
 require 'vcr'
@@ -13,3 +14,9 @@ VCR.configure do |c|
   c.hook_into :fakeweb
   c.default_cassette_options = { record: :all }
 end
+
+class MiniTest::Spec
+  include FactoryGirl::Syntax::Methods
+end
+
+FactoryGirl.find_definitions
