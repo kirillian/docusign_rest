@@ -1,7 +1,5 @@
-module Docusign
-  class Document
-    include ActiveModel::Model
-    include HashAttr
+module DocusignRest
+  class Document < Model
 
     hash_attr :document_id, :signers
   end

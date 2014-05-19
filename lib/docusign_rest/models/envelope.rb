@@ -1,7 +1,5 @@
 module DocusignRest
-  class Envelope
-    include ActiveModel::Model
-    include HashAttr
+  class Envelope < Model
 
     hash_attr :envelopeId, :uri, :statusDateTime, :status
     validates_presence_of :envelopeId, :uri, :statusDateTime, :status

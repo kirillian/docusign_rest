@@ -156,35 +156,7 @@ describe DocusignRest::Client do
 
     describe "embedded signing" do
       before do
-        # create the template dynamically
-        VCR.use_cassette("create_template")  do
-          @template_response = @client.create_template(
-            description: 'Cool Description',
-            name: "Cool Template Name",
-            signers: [
-              {
-                embedded: true,
-                name: 'jon',
-                email: 'someone@example.com',
-                roleName: 'Issuer',
-                sign_here_tabs: [
-                  {
-                    anchor_string: 'sign here',
-                    template_locked: true, #doesn't seem to do anything
-                    template_required: true, #doesn't seem to do anything
-                    email_notification: {supportedLanguage: 'en'} #FIXME if signer is setup as 'embedded' initial email notifications don't go out, but even when I set up a signer as non-embedded this setting didn't seem to make the email notifications actually stop...
-                  }
-                ]
-              }
-            ],
-            files: [
-              {path: 'test.pdf', name: 'test.pdf'}
-            ]
-          )
-          if ! @template_response["errorCode"].nil?
-            puts "[API ERROR] (create_template) errorCode: '#{@template_response["errorCode"]}', message: '#{@template_response["message"]}'"
-          end
-        end
+        @template_response = create_template
 
         # create a composite template dynamically
         VCR.use_cassette("create_composite_template")  do
@@ -216,18 +188,7 @@ describe DocusignRest::Client do
           end
         end
 
-        VCR.use_cassette("create_envelope/from_template")  do
-          signer = DocusignRest::Signer.new(:name => 'jon', :email => 'someone@example.com', :roleName => 'Issuer')
-
-          request = DocusignRest::EnvelopeFromTemplateRequest.new({
-            :status => 'sent',
-            :email => DocusignRest::Email.new(:subject => 'subject test', :body => 'body test'),
-            :compositeTemplates => [DocusignRest::CompositeTemplate.new([@template_response['templateId']],[signer], 1),
-                                    DocusignRest::CompositeTemplate.new([@composite_template_response['templateId']],[signer], 2)]
-          })
-
-          @envelope_response = @client.create_envelope_from_template_request(request)
-        end
+        @envelope_response = create_envelope_from_template [@template_response, @composite_template_response]
       end
 
       it "should get a template" do
@@ -328,5 +289,87 @@ describe DocusignRest::Client do
         end
       end
     end
+
+    describe '#get_recipients' do
+      it 'is successful if the envelope exists' do
+        envelope = create_envelope_from_template [create_template]
+
+        VCR.use_cassette("get_recipients") do
+          request = DocusignRest::RecipientsGetRequest.new :envelopeId => envelope.envelopeId
+          @client.get_custom_field_information_request(request).wont_be_nil
+        end
+      end
+    end
+
+
+    describe '#get_custom_field_information' do
+      it 'is successful if the envelope exists' do
+        envelope = create_envelope_from_template [create_template]
+
+        VCR.use_cassette("get_custom_field_information") do
+          request = DocusignRest::CustomFieldInformationRequest.new :envelopeId => envelope.envelopeId
+          @client.get_custom_field_information_request(request).wont_be_nil
+        end
+      end
+    end
+
+    describe '#get_recipent_tab_request' do
+      it 'is successful if recipient exists' do
+        envelope = create_envelope_from_template [create_template]
+
+        VCR.use_cassette("get_recipent_tab_request") do
+          request = DocusignRest::RecipientTabGetRequest.new :envelopeId => envelope.envelopeId, :recipientId => '1'
+          @client.get_custom_field_information_request(request).wont_be_nil
+        end
+      end
+    end
   end
+
+  private
+  def create_template
+    VCR.use_cassette("create_template") do
+      response = @client.create_template(
+          description: 'Cool Description',
+          name: 'Cool Template Name',
+          signers: [
+              {
+                  embedded: true,
+                  name: 'jon',
+                  email: 'someone@example.com',
+                  roleName: 'Issuer',
+                  sign_here_tabs: [
+                      {
+                          anchor_string: 'sign here',
+                          template_locked: true, #doesn't seem to do anything
+                          template_required: true, #doesn't seem to do anything
+                          email_notification: { supportedLanguage: 'en' } #FIXME if signer is setup as 'embedded' initial email notifications don't go out, but even when I set up a signer as non-embedded this setting didn't seem to make the email notifications actually stop...
+                      }
+                  ]
+              }
+          ],
+          files: [
+              { path: 'test.pdf', name: 'test.pdf' }
+          ]
+      )
+
+      puts "[API ERROR] (create_template) errorCode: '#{@template_response["errorCode"]}', message: '#{@template_response["message"]}'" unless response['errorCode'].nil?
+
+      response
+    end
+  end
+
+  def create_envelope_from_template (templates)
+    VCR.use_cassette("create_envelope/from_template") do
+      signer = DocusignRest::Signer.new(:name => 'jon', :email => 'someone@example.com', :roleName => 'Issuer')
+
+      request = DocusignRest::EnvelopeFromTemplateRequest.new({
+            :status => 'sent',
+            :email => DocusignRest::Email.new(:subject => 'subject test', :body => 'body test'),
+            :compositeTemplates =>  templates.each_with_index.map { |template, index| DocusignRest::CompositeTemplate.new([template['templateId']], [signer], index + 1) }
+      })
+
+      @client.create_envelope_from_template_request(request)
+    end
+  end
+
 end

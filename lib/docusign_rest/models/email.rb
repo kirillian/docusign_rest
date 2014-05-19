@@ -1,7 +1,5 @@
 module DocusignRest
-  class Email
-    include ActiveModel::Model
-    include HashAttr
+  class Email < Model
 
     hash_attr :subject, :body
 

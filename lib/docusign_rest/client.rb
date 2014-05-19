@@ -82,6 +82,10 @@ module DocusignRest
       URI.parse("#{endpoint}/#{api_version}#{url}")
     end
 
+    def full_uri(uri)
+      URI.parse("#{endpoint}/#{api_version}/accounts/#{account_id}#{uri}")
+    end
+
 
     # Internal: configures Net:HTTP with some default values that are required
     # for every request to the DocuSign API
@@ -713,6 +717,19 @@ module DocusignRest
       RecipientViewResponse.new(response).url
     end
 
+    def get_recipients_request(request)
+      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer signer }
+    end
+
+    #TODO casting result
+    def get_custom_field_information_request(request)
+      execute_request_full request
+    end
+
+    def get_recipent_tab_request(request)
+      execute_request_full(request)['textTabs'].map { |tab| DocusignRest::TextTab.new tab }
+    end
+
     # Public returns the names specified for a given email address (existing docusign user)
     #
     # email       - the email of the recipient
@@ -1131,6 +1148,37 @@ module DocusignRest
       raise Exception.new "response error: #{response}" unless response['errorCode'].nil?
 
       response
+    end
+
+    #TODO refactor to always use this method
+    def execute_request_full(request)
+      raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
+
+      params = request.attributes
+
+      uri = full_uri params[:uri]
+
+      http = initialize_net_http_ssl uri
+
+      request = case request.method
+        when :post
+        when :put
+        else
+          Net::HTTP::Get.new(uri.request_uri, headers(params[:headers]))
+      end
+
+      response = http.request request
+
+      raise Exception.new "response error: #{response.body}" unless response.kind_of? Net::HTTPSuccess
+
+      json_type = lambda { |content_type| content_type.include? 'application/json'}
+
+      case response['content-type']
+        when json_type
+          JSON.parse response.body
+        else
+          response.body
+      end
     end
 
     def write_response_to_temp_file(response, options)

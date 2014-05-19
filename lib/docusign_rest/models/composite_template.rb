@@ -1,7 +1,5 @@
 module DocusignRest
-  class CompositeTemplate
-    include ActiveModel::Model
-    include HashAttr
+  class CompositeTemplate < Model
 
     hash_attr :compositeTemplateId, :serverTemplates, :inlineTemplates, :pdfMetaDataTemplateSequence, :document
 
@@ -9,7 +7,7 @@ module DocusignRest
     validate :inline_templates_valid
 
     def initialize(template_ids, signers, sequence)
-      template_ids.each { |template_id| add_template template_id, sequence }
+      template_ids.each { |template_id| add_template template_id, sequence } unless template_ids.nil?
       add_signers signers, sequence
     end
 
@@ -33,14 +31,22 @@ module DocusignRest
     end
 
     def inline_templates_valid
-      inlineTemplates.each do |template|
-        self.errors.messages << template.errors.messages unless template.valid?
+      if inlineTemplates.nil?
+        self.errors.add :inlineTemplates, "Cannot be nil"
+      else
+        inlineTemplates.each do |template|
+          self.errors.messages.merge! template.errors.messages unless template.valid?
+        end
       end
     end
 
     def server_templates_valid
-      serverTemplates.each do |template|
-        self.errors.messages << template.errors.messages unless template.valid?
+      if serverTemplates.nil?
+        self.errors.add :serverTemplates, "Cannot be nil"
+      else
+        serverTemplates.each do |template|
+          self.errors.messages.merge! template.errors.messages unless template.valid?
+        end
       end
     end
   end
@@ -64,11 +70,11 @@ module DocusignRest
     validate :recipients_valid, :allow_blank => true
 
     def recipients_valid
-      self.errors.messages << recipients.errors.messages unless recipients.valid?
+      self.errors.messages.merge! recipients.errors.messages unless recipients.valid?
     end
   end
 
-  class Document
+  class DocumentName
     include ActiveModel::Model
     include HashAttr
 
@@ -84,7 +90,11 @@ module DocusignRest
     hash_attr :signers
 
     def signers=(signers)
-      attribute_hash[:signers] = signers.each_with_index { |signer, index| signer.recipientId = index + 1 }
+      if signers.nil?
+        attribute_hash[:signers] = signers
+      else
+        attribute_hash[:signers] = signers.each_with_index { |signer, index| signer.recipientId = index + 1 }
+      end
     end
 
     validates_presence_of :signers

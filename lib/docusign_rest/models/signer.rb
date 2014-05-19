@@ -1,7 +1,5 @@
 module DocusignRest
-  class Signer
-    include ActiveModel::Model
-    include HashAttr
+  class Signer < Model
 
     hash_attr :embedded, :name, :email, :clientUserId, :roleName, :recipientId
 

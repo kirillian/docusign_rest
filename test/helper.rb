@@ -12,7 +12,7 @@ require 'pry'
 VCR.configure do |c|
   c.cassette_library_dir = "test/fixtures/vcr"
   c.hook_into :fakeweb
-  c.default_cassette_options = { record: :all }
+  c.default_cassette_options = { record: :new_episodes }
 end
 
 class MiniTest::Spec

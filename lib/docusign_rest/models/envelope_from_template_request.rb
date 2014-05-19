@@ -1,7 +1,5 @@
 module DocusignRest
-  class EnvelopeFromTemplateRequest
-    include ActiveModel::Model
-    include HashAttr
+  class EnvelopeFromTemplateRequest < Model
 
     hash_attr :status, :email, :signers, :compositeTemplates, :template_id
 
@@ -16,7 +14,7 @@ module DocusignRest
 
     def composite_templates_valid
       compositeTemplates.each do |compositeTemplate|
-        self.errors.messages << compositeTemplate.errors.messages unless compositeTemplate.valid?
+        self.errors.messages.merge! compositeTemplate.errors.messages unless compositeTemplate.valid?
       end
     end
   end

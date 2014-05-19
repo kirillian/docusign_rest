@@ -1,7 +1,5 @@
 module DocusignRest
-  class RecipientViewRequest
-    include ActiveModel::Model
-    include HashAttr
+  class RecipientViewRequest < Model
 
     hash_attr :envelope_id, :name, :email, :return_url
 

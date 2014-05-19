@@ -12,6 +12,8 @@ The goal of this project is to add a layer of validation prior to sending a requ
 - Added 'save_document_to_temp_file' function not to store the request body in memory before writing the file. Uses a temporary file.
 - Added the ability to set what encoding the file will be written with
 - Added Composite Template support
+- Added Envelope Recipient Get Request
+- Added Envelope Recipient Tabs Get Request
 
 ##Installation
 
@@ -27,15 +29,15 @@ And then execute:
 
 ###Creating an Envelope from a Template
 
-    create_envelope_request = DocusignRest::EnvelopeFromTemplateRequest.new(:email => DocusignRest::Email.new(:subject => 'subject', :body => 'body'))
-
-    docusign_signers = [DocusignRest::Signer.new :name => 'name', :email => 'email', :roleName => 'role']
+    email = DocusignRest::Email.new :subject => 'subject', :body => 'body'
+    request = DocusignRest::EnvelopeFromTemplateRequest.new :email => email
+    signer = DocusignRest::Signer.new :name => 'name', :email => 'email', :roleName => 'role'
 
     template_ids.each_with_index do |template_id, index|
-      create_envelope_request.compositeTemplates << DocusignRest::CompositeTemplate.new([template_id], docusign_signers , index + 1)
+      request.compositeTemplates << DocusignRest::CompositeTemplate.new([template_id], [signer] , index + 1)
     end
 
-    envelope = DocusignRest::Client.new.create_envelope_from_template_request create_envelope_request
+    envelope = DocusignRest::Client.new.create_envelope_from_template_request request
 
 
 ###Getting Recipient View for an Envelope

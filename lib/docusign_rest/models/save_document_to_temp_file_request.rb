@@ -1,7 +1,5 @@
 module DocusignRest
-  class SaveDocumentToTempFileRequest
-    include ActiveModel::Model
-    include HashAttr
+  class SaveDocumentToTempFileRequest < Model
 
     hash_attr :envelope_id, :document_id, :temp_file_path, :encoding
 
