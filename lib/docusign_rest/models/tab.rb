@@ -1,6 +1,8 @@
 module DocusignRest
   class Tab < Model
-    hash_attr %i(anchorString
+    hash_attr *(%i(
+            tabId
+            anchorString
             anchorXOffset
             anchorYOffset
             anchorIgnoreIfNotPresent
@@ -13,6 +15,8 @@ module DocusignRest
             templateLocked
             templateRequired
             xPosition
-            yPosition)
+            yPosition
+            name
+            tabLabel))
   end
 end

@@ -718,7 +718,7 @@ module DocusignRest
     end
 
     def get_recipients_request(request)
-      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer signer }
+      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer.new signer }
     end
 
     #TODO casting result
@@ -727,7 +727,12 @@ module DocusignRest
     end
 
     def get_recipent_tab_request(request)
-      execute_request_full(request)['textTabs'].map { |tab| DocusignRest::TextTab.new tab }
+      DocusignRest::TabContainer.new execute_request_full(request)
+    end
+
+    #TODO casting result
+    def put_recipent_tab_request(request)
+      execute_request_full(request)
     end
 
     # Public returns the names specified for a given email address (existing docusign user)
@@ -1155,19 +1160,22 @@ module DocusignRest
       raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
 
       params = request.attributes
-
       uri = full_uri params[:uri]
-
       http = initialize_net_http_ssl uri
+      init_params = uri.request_uri, headers(params[:headers])
 
-      request = case request.method
+      response = http.request case request.method
         when :post
+          answer = Net::HTTP::Post.new *init_params
+          answer.body = request.body
+          answer
         when :put
+          answer = Net::HTTP::Put.new *init_params
+          answer.body = request.body
+          answer
         else
-          Net::HTTP::Get.new(uri.request_uri, headers(params[:headers]))
+          Net::HTTP::Get.new *init_params
       end
-
-      response = http.request request
 
       raise Exception.new "response error: #{response.body}" unless response.kind_of? Net::HTTPSuccess
 

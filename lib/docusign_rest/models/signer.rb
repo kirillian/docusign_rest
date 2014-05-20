@@ -1,7 +1,22 @@
 module DocusignRest
   class Signer < Model
 
-    hash_attr :embedded, :name, :email, :clientUserId, :roleName, :recipientId
+    hash_attr *(%i(
+            clientUserId
+            deliveredDateTime
+            email
+            embedded
+            name
+            note
+            recipientAuthenticationStatus
+            recipientId
+            recipientIdGuid
+            requireIdLookup
+            roleName
+            routingOrder
+            signedDateTime
+            status
+            userId))
 
     validates_presence_of :embedded, :name, :email, :roleName, :recipientId
     validates :email, :email => true
