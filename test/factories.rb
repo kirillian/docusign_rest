@@ -43,6 +43,17 @@ FactoryGirl.define do
     recipientId '1'
   end
 
+  factory :tab_add_request , :class => DocusignRest::TabAddRequest do
+    envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
+    recipientId '1'
+    tab_container
+  end
+
+  factory :tab_container, :class => DocusignRest::TabContainer do
+    skip_create
+    initialize_with { new({}) }
+  end
+
   factory :recipients_get_request, :class => DocusignRest::RecipientsGetRequest do
     envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
   end

@@ -6,6 +6,10 @@ describe DocusignRest::RecipientsAddRequest do
     it 'set method to post' do
       request.method.must_equal :post
     end
+
+    it 'defaults resend_envelope to true' do
+      request.resend_envelope.must_equal true
+    end
   end
   describe 'validation' do
     let(:request) { build :recipents_add_request }

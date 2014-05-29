@@ -16,6 +16,7 @@ The goal of this project is to add a layer of validation prior to sending a requ
 - Envelope Recipients Get Request
 - Envelope Recipients Delete
 - Envelope Recipients Add
+- Add Tab
 
 ##Installation
 

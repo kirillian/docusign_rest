@@ -9,8 +9,8 @@ module DocusignRest
     validates_presence_of :signers
     validate :signers_valid, :allow_blank => true
 
-    def uri
-      super + (resend_envelope ? '?resend_envelope=true' : '')
+    def uri=(uri)
+      attribute_hash[:uri] = uri + (resend_envelope ? '?resend_envelope=true' : '')
     end
 
     def body
@@ -24,7 +24,7 @@ module DocusignRest
     def initialize(args = {})
       args[:signers] ||= []
       args[:method] = :post
-      args[:resend_envelope] = true
+      self.resend_envelope = true
       super args
     end
 

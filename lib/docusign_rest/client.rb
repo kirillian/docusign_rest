@@ -747,6 +747,11 @@ module DocusignRest
       execute_request_full(request)
     end
 
+    #TODO casting result
+    def tab_add_request(request)
+      execute_request_full request
+    end
+
 
     # Public returns the names specified for a given email address (existing docusign user)
     #

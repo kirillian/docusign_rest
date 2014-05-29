@@ -374,6 +374,13 @@ describe DocusignRest::Client do
         skip "test this later"
       end
     end
+
+    describe '#tab_add_request' do
+      it 'needs to be tested' do
+
+        skip "test this later"
+      end
+    end
   end
 
   private

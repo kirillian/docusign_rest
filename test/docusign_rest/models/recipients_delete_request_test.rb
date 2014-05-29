@@ -4,7 +4,7 @@ describe DocusignRest::RecipientsDeleteRequest do
   describe 'initialize' do
     let(:request){ build :recipients_delete_request }
     it 'set method to delete' do
-      request.method.must_be :delete
+      request.method.must_equal :delete
     end
   end
 
