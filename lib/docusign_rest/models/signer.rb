@@ -16,6 +16,9 @@ module DocusignRest
             routingOrder
             signedDateTime
             status
+            tabs
+            templateLocked
+            templateRequired
             userId))
 
     validates_presence_of :embedded, :name, :email, :roleName, :recipientId

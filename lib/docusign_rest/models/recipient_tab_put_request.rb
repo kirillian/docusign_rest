@@ -3,7 +3,7 @@ module DocusignRest
     hash_attr :body
 
     def build_body(tab_container)
-      self.body = tab_container.attributes
+      self.body = tab_container.attributes.json
     end
 
     def initialize(args = {})

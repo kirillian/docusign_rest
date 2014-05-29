@@ -1,6 +1,7 @@
 module DocusignRest
   class TextTab < Tab
-    hash_attr *(%i(bold
+    hash_attr *(%i(
+            bold
             font
             fontColor
             fontSize

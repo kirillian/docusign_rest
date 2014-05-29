@@ -290,13 +290,12 @@ describe DocusignRest::Client do
       end
     end
 
-    describe '#get_recipients' do
+    describe '#get_recipients_request' do
       it 'is successful if the envelope exists' do
         envelope = create_envelope_from_template [create_template]
 
-        VCR.use_cassette("get_recipients") do
-          request = DocusignRest::RecipientsGetRequest.new :envelopeId => envelope.envelopeId
-          @client.get_custom_field_information_request(request).wont_be_nil
+        VCR.use_cassette 'get_recipients_request' do
+          @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId).wont_be_nil
         end
       end
     end
@@ -306,7 +305,7 @@ describe DocusignRest::Client do
       it 'is successful if the envelope exists' do
         envelope = create_envelope_from_template [create_template]
 
-        VCR.use_cassette("get_custom_field_information") do
+        VCR.use_cassette 'get_custom_field_information' do
           request = DocusignRest::CustomFieldInformationRequest.new :envelopeId => envelope.envelopeId
           @client.get_custom_field_information_request(request).wont_be_nil
         end
@@ -317,10 +316,62 @@ describe DocusignRest::Client do
       it 'is successful if recipient exists' do
         envelope = create_envelope_from_template [create_template]
 
-        VCR.use_cassette("get_recipent_tab_request") do
+        VCR.use_cassette 'get_recipent_tab_request' do
           request = DocusignRest::RecipientTabGetRequest.new :envelopeId => envelope.envelopeId, :recipientId => '1'
           @client.get_custom_field_information_request(request).wont_be_nil
         end
+      end
+    end
+
+    describe '#add_recipients_request' do
+      it 'adds a new recipient to an envelope' do
+        envelope = create_envelope_from_template [create_template]
+        signers_before = signers_after = nil
+        VCR.use_cassette 'add_recipients_request/add_recipients_request_before' do
+          signers_before = @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId)
+        end
+        VCR.use_cassette 'add_recipients_request/add_recipients_request' do
+          request = build :recipents_add_request, :envelopeId => envelope.envelopeId
+          request.signers[0].email = "email_#{signers_before.count+1}@example.com"
+          request.signers[0].name = "name_#{signers_before.count+1}"
+          request.signers[0].recipientId = "#{signers_before.count+1}"
+          @client.add_recipients_request(request)
+        end
+        VCR.use_cassette 'add_recipients_request/add_recipients_request_after' do
+          signers_after = @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId)
+        end
+
+        (signers_after.count - signers_before.count).must_equal 1
+      end
+    end
+
+    describe '#delete_recipient_request' do
+      it 'removes a recipient from the envelope' do
+        envelope = create_envelope_from_template [create_template]
+        signers_before = signers_after = nil
+
+        VCR.use_cassette 'delete_recipient_request/before' do
+          signers_before = @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId)
+          @client.add_recipients_request(build :recipents_add_request, :envelopeId => envelope.envelopeId) if signers_before.empty?
+          signers_before = @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId)
+        end
+
+        VCR.use_cassette 'delete_recipient_request/request' do
+          @client.delete_recipient_request(build :recipients_delete_request, :envelopeId => envelope.envelopeId, :recipientId => signers_before[0].recipientId)
+        end
+
+        VCR.use_cassette 'delete_recipient_request/after' do
+          signers_after = @client.get_recipients_request(build :recipients_get_request, :envelopeId => envelope.envelopeId)
+        end
+
+        (signers_before.count - signers_after.count).must_equal 1
+      end
+    end
+
+    describe '#get_recipents_request' do
+      it 'needs to be tested' do
+
+        skip "test this later"
       end
     end
   end

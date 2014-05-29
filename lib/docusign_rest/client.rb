@@ -717,13 +717,25 @@ module DocusignRest
       RecipientViewResponse.new(response).url
     end
 
-    def get_recipients_request(request)
-      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer.new signer }
-    end
 
     #TODO casting result
     def get_custom_field_information_request(request)
       execute_request_full request
+    end
+
+    #returns list of signers
+    def delete_recipient_request(request)
+      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer.new signer }
+    end
+
+    #returns list of signers
+    def get_recipients_request(request)
+      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer.new signer }
+    end
+
+    #returns list of signers
+    def add_recipients_request(request)
+      execute_request_full(request)['signers'].map { |signer| DocusignRest::Signer.new signer }
     end
 
     def get_recipent_tab_request(request)
@@ -734,6 +746,7 @@ module DocusignRest
     def put_recipent_tab_request(request)
       execute_request_full(request)
     end
+
 
     # Public returns the names specified for a given email address (existing docusign user)
     #
@@ -1171,6 +1184,10 @@ module DocusignRest
           answer
         when :put
           answer = Net::HTTP::Put.new *init_params
+          answer.body = request.body
+          answer
+        when :delete
+          answer = Net::HTTP::Delete.new *init_params
           answer.body = request.body
           answer
         else

@@ -37,4 +37,22 @@ FactoryGirl.define do
     document_id 'document_id'
     temp_file_path 'temp_file_path'
   end
+
+  factory :recipients_delete_request, :class => DocusignRest::RecipientsDeleteRequest do
+    envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
+    recipientId '1'
+  end
+
+  factory :recipients_get_request, :class => DocusignRest::RecipientsGetRequest do
+    envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
+  end
+
+  factory :recipents_add_request, :class => DocusignRest::RecipientsAddRequest do
+    envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
+
+    after(:build) do |request|
+      request << build(:docusign_signer)
+    end
+  end
+
 end

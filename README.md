@@ -8,12 +8,14 @@ The goal of this project is to add a layer of validation prior to sending a requ
 
 ##Progress
 
-- Added dependency to 'activemodel' in order to validate a request before sending it to Docusign
+- Dependency to 'activemodel' in order to validate a request before sending it to Docusign
 - Added 'save_document_to_temp_file' function not to store the request body in memory before writing the file. Uses a temporary file.
-- Added the ability to set what encoding the file will be written with
-- Added Composite Template support
-- Added Envelope Recipient Get Request
-- Added Envelope Recipient Tabs Get Request
+- Ability to set what encoding the file will be written with
+- Composite Template support
+- Envelope Recipient Tabs Get Request
+- Envelope Recipients Get Request
+- Envelope Recipients Delete
+- Envelope Recipients Add
 
 ##Installation
 
