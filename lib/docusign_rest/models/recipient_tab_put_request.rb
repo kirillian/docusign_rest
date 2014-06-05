@@ -1,3 +1,5 @@
+require_relative 'recipient_tab_get_request'
+
 module DocusignRest
   class RecipientTabPutRequest < RecipientTabGetRequest
     hash_attr :body

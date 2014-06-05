@@ -1,3 +1,5 @@
+require_relative 'tab'
+
 module DocusignRest
   class TextTab < Tab
     hash_attr *(%i(

@@ -4,6 +4,8 @@ require_relative 'docusign_rest/version'
 require_relative 'docusign_rest/configuration'
 require_relative 'docusign_rest/client'
 require_relative 'docusign_rest/utility'
+require_relative 'docusign_rest/models/model'
+require_relative 'docusign_rest/models/request'
 Dir.glob("#{File.dirname(__FILE__)}/docusign_rest/validators/*.rb").each { |file| require "#{File.dirname(file)}/#{File.basename(file, '.rb')}" }
 Dir.glob("#{File.dirname(__FILE__)}/docusign_rest/models/*.rb").each     { |file| require "#{File.dirname(file)}/#{File.basename(file, '.rb')}" }
 
