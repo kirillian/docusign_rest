@@ -14,6 +14,7 @@ module DocusignRest
             requireIdLookup
             roleName
             routingOrder
+            signInEachLocation
             signedDateTime
             status
             tabs
