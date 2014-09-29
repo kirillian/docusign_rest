@@ -300,6 +300,15 @@ describe DocusignRest::Client do
       end
     end
 
+    describe '#get_login_information' do
+      it 'returns something' do
+        VCR.use_cassette 'get_login_information', :record => :all do
+          information = @client.get_login_information
+
+          information.wont_be_nil
+        end
+      end
+    end
 
     describe '#get_custom_field_information' do
       it 'is successful if the envelope exists' do

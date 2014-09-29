@@ -82,17 +82,19 @@ module DocusignRest
       URI.parse("#{endpoint}/#{api_version}#{url}")
     end
 
-    def full_uri(uri)
-      URI.parse("#{endpoint}/#{api_version}/accounts/#{account_id}#{uri}")
+    def full_uri(request)
+      uri = "#{endpoint}/#{api_version}"
+      uri << "/accounts/#{account_id}" if request.account_related?
+      uri << request.uri
+      URI.parse uri
     end
-
 
     # Internal: configures Net:HTTP with some default values that are required
     # for every request to the DocuSign API
     #
     # Returns a configured Net::HTTP object into which a request can be passed
     def initialize_net_http_ssl(uri)
-      http = Net::HTTP.new(uri.host, uri.port)
+      http = Net::HTTP.new uri.host, uri.port
 
       http.use_ssl = uri.scheme == 'https'
 
@@ -149,30 +151,8 @@ module DocusignRest
       JSON.parse(response.body)
     end
 
-
-    # Public: gets info necessary to make additional requests to the DocuSign API
-    #
-    # options - hash of headers if the client wants to override something
-    #
-    # Examples:
-    #
-    #   client = DocusignRest::Client.new
-    #   response = client.login_information
-    #   puts response.body
-    #
-    # Returns:
-    #   accountId - For the username, password, and integrator_key specified
-    #   baseUrl   - The base URL for all future DocuSign requests
-    #   email     - The email used when signing up for DocuSign
-    #   isDefault - # TODO identify what this is
-    #   name      - The account name provided when signing up for DocuSign
-    #   userId    - # TODO determine what this is used for, if anything
-    #   userName  - Full name provided when signing up for DocuSign
-    def get_login_information(options={})
-      uri = build_uri('/login_information')
-      request = Net::HTTP::Get.new(uri.request_uri, headers(options[:headers]))
-      http = initialize_net_http_ssl(uri)
-      http.request(request)
+    def get_login_information
+      execute_request_full LoginInformationRequest.new
     end
 
 
@@ -1178,30 +1158,23 @@ module DocusignRest
       raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
 
       params = request.attributes
-      uri = full_uri params[:uri]
+
+      uri = full_uri request
       http = initialize_net_http_ssl uri
       init_params = uri.request_uri, headers(params[:headers])
 
       response = http.request case request.method
-        when :post
-          answer = Net::HTTP::Post.new *init_params
-          answer.body = request.body
-          answer
-        when :put
-          answer = Net::HTTP::Put.new *init_params
-          answer.body = request.body
-          answer
-        when :delete
-          answer = Net::HTTP::Delete.new *init_params
+        when :post, :put, :delete
+          answer = "Net::HTTP::#{request.method.to_s.capitalize}".constantize.new *init_params
           answer.body = request.body
           answer
         else
           Net::HTTP::Get.new *init_params
       end
 
-      raise Exception.new "response error: #{response.body}" unless response.kind_of? Net::HTTPSuccess
+      raise Exception.new "response error: #{response.body}; request: #{request.to_json}" unless response.kind_of? Net::HTTPSuccess
 
-      json_type = lambda { |content_type| content_type.include? 'application/json'}
+      json_type = -> (content_type) { content_type.include? 'application/json' }
 
       case response['content-type']
         when json_type

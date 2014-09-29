@@ -10,5 +10,9 @@ module DocusignRest
       options[:method] ||= :get
       super options
     end
+
+    def account_related?
+      true
+    end
   end
 end
