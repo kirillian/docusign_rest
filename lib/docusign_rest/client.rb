@@ -95,23 +95,12 @@ module DocusignRest
     # Returns a configured Net::HTTP object into which a request can be passed
     def initialize_net_http_ssl(uri)
       http = Net::HTTP.new uri.host, uri.port
-
       http.use_ssl = uri.scheme == 'https'
-
-      if defined?(Rails) && Rails.env.test?
-        in_rails_test_env = true
-      else
-        in_rails_test_env = false
-      end
+      http.set_debug_output $stdout if defined?(Rails) && Rails.env.development?
+      in_rails_test_env = defined?(Rails) && Rails.env.test?
 
       if http.use_ssl? && !in_rails_test_env
-        if ca_file
-          if File.exists?(ca_file)
-            http.ca_file = ca_file
-          else
-            raise 'Certificate path not found.'
-          end
-        end
+        load_cert http if ca_file
 
         # Explicitly verifies that the certificate matches the domain.
         # Requires that we use www when calling the production DocuSign API
@@ -139,7 +128,7 @@ module DocusignRest
     #   access_token - Access token information
     #   scope - This should always be "api"
     #   token_type - This should always be "bearer"
-    def get_token(account_id, email, password)
+    def get_token(email, password)
       content_type = { 'Content-Type' => 'application/x-www-form-urlencoded', 'Accept' => 'application/json' }
       uri = build_uri('/oauth2/token')
 
@@ -1143,6 +1132,7 @@ module DocusignRest
     end
 
     private
+
     def execute_request(request)
       raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
 
@@ -1153,9 +1143,14 @@ module DocusignRest
       response
     end
 
+    def load_cert(http)
+      fail 'Certificate path not found.' unless File.exists?(ca_file)
+      http.ca_file = ca_file
+    end
+
     #TODO refactor to always use this method
     def execute_request_full(request)
-      raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
+      fail Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
 
       params = request.attributes
 

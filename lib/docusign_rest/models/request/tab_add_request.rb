@@ -21,6 +21,7 @@ module DocusignRest
     end
 
     private
+
     def build_uri
       self.uri = "/envelopes/#{envelopeId}/recipients/#{recipientId}/tabs"
     end
