@@ -949,13 +949,13 @@ module DocusignRest
         if response.kind_of? Net::HTTPSuccess
           return write_response_to_temp_file response, options
         else
-          raise Exception.new "Error occurred, errorCode returned from DocuSign: #{JSON.parse(response.body)['errorCode']}"
+          fail "Error occurred, errorCode returned from DocuSign: #{JSON.parse(response.body)['errorCode']}"
         end
       end
     end
 
     def save_document_to_temp_file_request(request)
-      raise Exception.new("request invalid: #{request.errors.messages}")  unless request.valid?
+      fail "request invalid: #{request.errors.messages}" unless request.valid?
       save_document_to_temp_file(request.attributes)
     end
 
@@ -1134,11 +1134,11 @@ module DocusignRest
     private
 
     def execute_request(request)
-      raise Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
+      fail "request invalid: #{request.errors.messages}" unless request.valid?
 
       response = yield request
 
-      raise Exception.new "response error: #{response}" unless response['errorCode'].nil?
+      fail "response error: #{response}" unless response['errorCode'].nil?
 
       response
     end
@@ -1150,7 +1150,7 @@ module DocusignRest
 
     #TODO refactor to always use this method
     def execute_request_full(request)
-      fail Exception.new "request invalid: #{request.errors.messages}" unless request.valid?
+      fail "request invalid: #{request.errors.messages}" unless request.valid?
 
       params = request.attributes
 
@@ -1167,7 +1167,7 @@ module DocusignRest
           Net::HTTP::Get.new *init_params
       end
 
-      raise Exception.new "response error: #{response.body}; request: #{request.to_json}" unless response.kind_of? Net::HTTPSuccess
+      fail "response error: #{response.body}; request: #{request.to_json}" unless response.kind_of? Net::HTTPSuccess
 
       json_type = -> (content_type) { content_type.include? 'application/json' }
 
