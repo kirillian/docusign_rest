@@ -67,10 +67,10 @@ module DocusignRest
     hash_attr :documentId, :name, :transformPdfFields, :sequence, :recipients
 
     validates_presence_of :sequence, :recipients
-    validate :recipients_valid, :allow_blank => true
+    validate :recipients_valid
 
     def recipients_valid
-      self.errors.messages.merge! recipients.errors.messages unless recipients.valid?
+      self.errors.messages.merge! recipients.errors.messages unless recipients.nil? || recipients.valid?
     end
   end
 
