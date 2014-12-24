@@ -686,8 +686,12 @@ module DocusignRest
       RecipientViewResponse.new(response).url
     end
 
+    # TODO: casting result
+    def send_draft_envelope(request)
+      execute_request_full request
+    end
 
-    #TODO casting result
+    # TODO: casting result
     def get_custom_field_information_request(request)
       execute_request_full request
     end
