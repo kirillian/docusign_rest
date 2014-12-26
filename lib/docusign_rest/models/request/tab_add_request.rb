@@ -6,14 +6,8 @@ module DocusignRest
 
     validates_presence_of :envelopeId, :recipientId, :tab_container
 
-    def envelopeId=(envelope_id)
-      attribute_hash[:envelopeId]= envelope_id
-      build_uri
-    end
-
-    def recipientId=(recipient_id)
-      attribute_hash[:recipientId]= recipient_id
-      build_uri
+    def uri
+      "/envelopes/#{envelopeId}/recipients/#{recipientId}/tabs"
     end
 
     def body
@@ -22,13 +16,13 @@ module DocusignRest
 
     private
 
-    def build_uri
-      self.uri = "/envelopes/#{envelopeId}/recipients/#{recipientId}/tabs"
+    def initialize(args = {})
+      args[:method] = _method
+      super args
     end
 
-    def initialize(args = {})
-      args[:method] = :post
-      super args
+    def _method
+      :post
     end
   end
 end
