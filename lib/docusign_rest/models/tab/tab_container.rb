@@ -3,6 +3,7 @@ module DocusignRest
     hash_attr :signHereTabs, :textTabs
 
     private
+
     def initialize(hash)
       hash.keys.each do |key|
         case key

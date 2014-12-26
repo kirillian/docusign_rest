@@ -720,8 +720,13 @@ module DocusignRest
       execute_request_full(request)
     end
 
-    #TODO casting result
-    def tab_add_request(request)
+    def add_tabs(envelope_id, recipient_id, tab_container)
+      request = DocusignRest::TabAddRequest.new :envelopeId => envelope_id, :recipientId => recipient_id, :tab_container => tab_container
+      execute_request_full request
+    end
+
+    def update_tabs(envelope_id, recipient_id, tab_container)
+      request = DocusignRest::TabUpdate.new :envelopeId => envelope_id, :recipientId => recipient_id, :tab_container => tab_container
       execute_request_full request
     end
 
