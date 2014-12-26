@@ -25,4 +25,12 @@ module DocusignRest
       :post
     end
   end
+
+  class TabUpdate < TabAddRequest
+    private
+
+    def _method
+      :put
+    end
+  end
 end
