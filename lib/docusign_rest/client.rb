@@ -678,7 +678,9 @@ module DocusignRest
       Envelope.new response
     end
 
-    def get_recipient_view_request(request)
+    def recipient_view(signer, envelope, return_url)
+      request = DocusignRest::RecipientViewRequest.new :signer => signer, :envelope => envelope, :return_url => return_url
+
       response = execute_request(request) do |request|
         get_recipient_view request.attributes
       end

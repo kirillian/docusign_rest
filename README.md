@@ -48,7 +48,7 @@ And then execute:
     signer = DocusignRest::Signer.new :name => 'name', :email => 'email', :roleName => 'role'
     envelope = DocusignRest::Envelope.new :envelopeId => 'envelope_id', :uri => 'uri', :statusDateTime => 'status_date_time', :status => 'status'
 
-    url = DocusignRest::Client.new.get_recipient_view_request(DocusignRest::RecipientViewRequest.new(:signer => signer, :envelope => envelope, :return_url => 'return_url'))
+    url = DocusignRest::Client.new.recipient_view(signer, envelope, 'return_url'))
 
 ##Validation
 
