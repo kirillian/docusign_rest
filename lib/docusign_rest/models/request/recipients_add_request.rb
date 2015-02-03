@@ -7,7 +7,7 @@ module DocusignRest
     attr_accessor :resend_envelope
 
     validates_presence_of :signers
-    validate :signers_valid, :allow_blank => true
+    validate :signers_valid
 
     def uri=(uri)
       attribute_hash[:uri] = uri + (resend_envelope ? '?resend_envelope=true' : '')
