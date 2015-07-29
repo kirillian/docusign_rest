@@ -688,6 +688,10 @@ module DocusignRest
       RecipientViewResponse.new(response).url
     end
 
+    def sender_view(envelope_id, return_url)
+      execute_request_full(DocusignRest::RecipientViewRequest.new :envelopeId => envelope_id, :returnUrl => return_url)['url']
+    end
+
     # TODO: casting result
     def send_draft_envelope(request)
       execute_request_full request

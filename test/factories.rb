@@ -66,4 +66,8 @@ FactoryGirl.define do
     end
   end
 
+  factory :sender_view_request, :class => DocusignRest::SenderViewRequest do
+    envelopeId '5C662120-09F0-4A9B-98D2-E8E099038A4F'
+    returnUrl 'return_url'
+  end
 end

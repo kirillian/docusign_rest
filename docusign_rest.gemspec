@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency('hash_attr')
   gem.add_dependency('activemodel', '>= 4.0.2')
   gem.add_development_dependency('rake')
-  gem.add_development_dependency('minitest', '~>4.0')
+  gem.add_development_dependency('minitest', '~> 5.7.0')
   gem.add_development_dependency('guard-minitest')
   gem.add_development_dependency('rb-fsevent', '~> 0.9')
   gem.add_development_dependency('turn')

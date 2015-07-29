@@ -22,6 +22,7 @@ module DocusignRest
 
       options[:headers]['Content-Type']= 'application/x-www-form-urlencoded'
       options[:method]= :post
+      super options
     end
   end
 end
