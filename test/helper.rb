@@ -1,9 +1,8 @@
 require_relative '../lib/docusign_rest'
 
-require 'minitest/spec'
 require 'minitest/autorun'
 require 'factory_girl'
-require 'turn'
+# require 'turn'
 require 'json'
 require 'vcr'
 require_relative 'docusign_login_config'
