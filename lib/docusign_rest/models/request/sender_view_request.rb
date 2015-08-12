@@ -5,7 +5,7 @@ module DocusignRest
     validates_presence_of :envelopeId, :returnUrl
 
     def body
-      { 'returnUrl' => returnUrl }
+      { 'returnUrl' => returnUrl }.to_json
     end
 
     def uri
