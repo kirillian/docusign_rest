@@ -689,7 +689,7 @@ module DocusignRest
     end
 
     def sender_view(envelope_id, return_url)
-      execute_request_full(DocusignRest::RecipientViewRequest.new :envelopeId => envelope_id, :returnUrl => return_url)['url']
+      execute_request_full(DocusignRest::SenderViewRequest.new :envelopeId => envelope_id, :returnUrl => return_url)['url']
     end
 
     # TODO: casting result
