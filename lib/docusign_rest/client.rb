@@ -721,6 +721,11 @@ module DocusignRest
       DocusignRest::TabContainer.new execute_request_full(request)
     end
 
+    def get_list_of_templates(request)
+      response = execute_request_full(request).try(:values).try(:first)
+      response.map { |t| [t['name'], t['templateId']] } if response
+    end
+
     #TODO casting result
     def put_recipent_tab_request(request)
       execute_request_full(request)
