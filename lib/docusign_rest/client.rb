@@ -67,7 +67,6 @@ module DocusignRest
       @docusign_authentication_headers.merge(default)
     end
 
-
     # Internal: builds a URI based on the configurable endpoint, api_version,
     # and the passed in relative url
     #
@@ -78,8 +77,8 @@ module DocusignRest
     #   build_uri('/login_information')
     #
     # Returns a parsed URI object
-    def build_uri(url)
-      URI.parse("#{endpoint}/#{api_version}#{url}")
+    def build_uri(url, api_version_override: nil)
+      URI.parse("#{endpoint}/#{api_version_override || api_version}#{url}")
     end
 
     def full_uri(request)
@@ -1144,6 +1143,26 @@ module DocusignRest
     def get_envelope(envelope_id)
       content_type = { 'Content-Type' => 'application/json' }
       uri = build_uri("/accounts/#{acct_id}/envelopes/#{envelope_id}")
+
+      http = initialize_net_http_ssl(uri)
+      request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
+      response = http.request(request)
+      JSON.parse(response.body)
+    end
+
+    # Public returns the form data for a given envelope
+    #
+    # envelope_id  - ID of the envelope for which you want to retrive the
+    #                signer info
+    # headers      - optional hash of headers to merge into the existing
+    #                required headers for a multipart request.
+    #
+    # Returns the envelope's form data, including all form key value pairs as well as timestamps for signing
+    def get_envelope_form_data(options={})
+      content_type = { 'Content-Type' => 'application/json' }
+      content_type.merge(options[:headers]) if options[:headers]
+
+      uri = build_uri("/accounts/#{acct_id}/envelopes/#{options[:envelope_id]}/form_data?", api_version_override: 'v2.1')
 
       http = initialize_net_http_ssl(uri)
       request = Net::HTTP::Get.new(uri.request_uri, headers(content_type))
